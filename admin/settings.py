@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-from configs.localsettings import SECRET_KEY, DATABASES
+from configs.local_settings import SECRET_KEY, DATABASES
 import pymysql
 pymysql.install_as_MySQLdb()
 

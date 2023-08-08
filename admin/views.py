@@ -4,20 +4,12 @@ import traceback
 
 from django.shortcuts import redirect
 
-# 设置Django运行所依赖的环境
-import os
-if not os.environ.get('DJANGO_SETTINGS_MODULE'):
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'admin.settings')
-# 更新配置文件
-import django
-django.setup()
-
 
 def index(request):
     if not request.user.is_authenticated:
-        return redirect('/login/?next=%s' % request.path)
+        return redirect('/admin/login/?next=%s' % request.path)
     else:
-        return redirect('/')
+        return redirect('/admin/')
 
 
 import pandas as pd
@@ -32,17 +24,12 @@ base_requests_func = "base_requests"
 from app_models.apscheduler_configs.models import ApschedulerTasks
 
 
-def get_tasks(job_id=None, table_id=None, is_status=True):
-    if job_id is None and table_id is None:
-        tasks = ApschedulerTasks.objects.filter(is_delete=0).exclude(job_id='apscheduler_monitor')
-    elif job_id is not None and table_id is None:
-        tasks = ApschedulerTasks.objects.filter(is_delete=0).filter(job_id=job_id)
-    elif job_id is None and table_id is not None:
-        tasks = ApschedulerTasks.objects.filter(is_delete=0).filter(id=table_id)
-    else:
-        tasks = ApschedulerTasks.objects.filter(is_delete=0).filter(id=table_id).filter(job_id=job_id)
-    if is_status:
+def get_tasks(is_status=True):
+    tasks = ApschedulerTasks.objects.filter(is_delete=0)
+    if is_status is True:
         tasks = tasks.filter(status=1)
+    elif is_status is False:
+        tasks = tasks.filter(status=0)
 
     tasks = pd.DataFrame(list(tasks.values()))
     if not tasks.empty:
@@ -56,7 +43,6 @@ def get_tasks(job_id=None, table_id=None, is_status=True):
         update_data = tasks.loc[tasks['have_job_id'] == 0, ["id", "job_id"]]
         for data in update_data.to_dict("records"):
             ApschedulerTasks.objects.get(id=data['id']).update(**{k: v for k, v in data.items() if k != "id"})
-
     else:
         tasks = pd.DataFrame(columns=["job_id"])
         tasks_ids = []

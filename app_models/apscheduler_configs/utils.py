@@ -16,7 +16,7 @@ interval_time_keys = ["second", "minute", "hour", "day", "week"]
 
 def check_job_id_existed(job_id):
     tasks = ApschedulerTasks.objects.filter(is_delete=0).filter(job_id=job_id).first()
-    if len(list(tasks.values("id"))) > 0:
+    if tasks is not None:
         return True
     else:
         return False
@@ -94,8 +94,10 @@ def add_reset_tasks(form_data):
 
 def get_next_run_time(job_id):
     data = scheduler.get_job(job_id)
-    if not data.empty:
-        _ = data.to_dict("records")[0]
-        return {str(_['id']): str(_['next_run_time'] + datetime.timedelta(hours=8)) if _['next_run_time'] is not None else "-"}
+    if data is not None:
+        return {str(data.id): data.next_run_time.strftime("%Y-%m-%d %H:%M:%S") if data.next_run_time is not None else "-"}
+    elif data.id is not None:
+        return {str(data.id): "-"}
     else:
         return {}
+

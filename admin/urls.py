@@ -19,27 +19,32 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 
-admin.site.site_header = 'TestSystem'
-admin.site.index_title = 'TestSystem'
-admin.site.site_title = "TestSystemV1.0"
+admin.site.site_header = 'DjangoApschedulerDemo'
+admin.site.index_title = 'TestDjangoApschedulerDemoSystem'
+admin.site.site_title = "DjangoApschedulerDemo V1.0"
 
 urlpatterns = [
                   path('', views.index),
-                  path('/', admin.site.urls),
+                  path('admin/', admin.site.urls),
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
-from admin.views import get_tasks, get_existed_jobs, scheduler, remove_jobs
-from app_models.apscheduler_configs.utils import add_reset_tasks
+from admin.views import get_tasks, get_existed_jobs, scheduler
 
-tasks, tasks_ids = get_tasks()
+status_tasks, status_tasks_ids = get_tasks(is_status=True)
+pause_tasks, pause_tasks_ids = get_tasks(is_status=False)
 existed_jobs_ids = get_existed_jobs(scheduler=scheduler)
-delete_ids = list(set(existed_jobs_ids) - set(tasks_ids))
-remove_jobs(scheduler=scheduler, delete_ids=delete_ids)
 
-resume_ids = list(set(existed_jobs_ids) & set(tasks_ids))
-for resume_id in resume_ids:
-    _tasks, _id = get_tasks(resume_id)
-    if _tasks:
-        _tasks = _tasks[0]
-        add_reset_tasks(_tasks)
+for pause_id in set(existed_jobs_ids) & set(pause_tasks_ids):
+    scheduler.pause_job(job_id=pause_id)
+
+for status_id in set(existed_jobs_ids) & set(status_tasks_ids):
+    scheduler.resume_job(job_id=status_id)
+
+for remove_id in set(existed_jobs_ids) - set(status_tasks_ids + pause_tasks_ids):
+    scheduler.remove_job(remove_id)
+
+for add_id in set(status_tasks_ids + pause_tasks_ids) - set(existed_jobs_ids):
+    # add_jobs()
+    ## 当前机制下, 服务停止时不能新建任务, 所以重启时不考虑add
+    pass

@@ -70,7 +70,7 @@ class ApschedulerTasksAdmin(admin.ModelAdmin):
     time_display.short_description = "执行时间设置"
 
     def log_display(self, obj):
-        url = "/django_apscheduler/djangojobexecution/?q={job_id}".format(job_id=obj.job_id)  # 跳转的超链接
+        url = "/admin/django_apscheduler/djangojobexecution/?job__id={job_id}".format(job_id=obj.job_id)  # 跳转的超链接
         url_text = "日志"  # 显示的文本
         return format_html(u'<a href="{}" target="_blank">{}</a>'.format(url, url_text))
     log_display.allow_tags = True
